@@ -36,18 +36,17 @@ public class Block {
         System.out.println("Block Mined!!! : " + hash);
     }
 
-    public boolean addTransaction(Transaction transaction) {
+    public void addTransaction(Transaction transaction) {
         if(transaction == null) {
-            return false;
+            return;
         }
         if((!Objects.equals(previousHash, "0"))) {
             if((!transaction.processTransaction())) {
                 System.out.println("Transaction failed to process. Discarded.");
-                return false;
+                return;
             }
         }
         transactions.add(transaction);
         System.out.println("Transaction Successfully added to Block");
-        return true;
     }
 }

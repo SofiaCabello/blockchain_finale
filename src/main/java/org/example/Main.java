@@ -19,33 +19,30 @@ public class Main {
 
     public static void main(String[] args) {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); // 设置Bouncey castle作为安全提供者
+        // 以下是多线程测试
+        Block genesisBlock = new Block("0");
+        genesisBlock.mineBlock(difficulty);
+        blockchain.add(genesisBlock);
 
-        walletA = new Wallet();
-        walletB = new Wallet();
-        Wallet coinbase = new Wallet();
+        int numberOfNodes = 5;
+        ArrayList<Node> nodeList = new ArrayList<>();
+        for(int i = 0; i < numberOfNodes; i++) {
+            Node node = new Node("Node " + i, blockchain, UTXOs);
+            nodeList.add(node);
+            Transaction genesisTransaction = new Transaction(node.wallet.publicKey, node.wallet.publicKey, 100f, null);
+            genesisTransaction.generateSignature(node.wallet.privateKey);
+            genesisTransaction.transactionId = "0";
+            genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.receiver, genesisTransaction.value, genesisTransaction.transactionId));
+            UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+            node.wallet.UTXOs = new HashMap<>(UTXOs);
+        }
 
-        // 创建创世交易，将100个币发送给walletA
-        genesisTransaction = new Transaction(coinbase.publicKey, walletA.publicKey, 100f, null);
-        genesisTransaction.generateSignature(coinbase.privateKey); // 对创世交易进行签名
-        genesisTransaction.transactionId = "0"; // 设置创世交易的id
-        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.receiver, genesisTransaction.value, genesisTransaction.transactionId)); // 将创世交易的输出添加到未使用的交易输出列表中
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0)); // 将创世交易的输出添加到未使用的交易输出列表中
-
-        System.out.println("Creating and Mining Genesis block... ");
-        Block genesis = new Block("0");
-        genesis.addTransaction(genesisTransaction); // 将创世交易添加到区块中
-        addBlock(genesis); // 挖掘创世区块
-
-        // 测试
-        Block block1 = new Block(genesis.hash);
-        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
-        System.out.println("\nWalletA is Attempting to send funds (40) to WalletB...");
-        block1.addTransaction(walletA.sendFunds(walletB.publicKey, 40f));
-        addBlock(block1);
-        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
-        System.out.println("WalletB's balance is: " + walletB.getBalance());
-
-        System.out.println("\nBlockChain is Valid: " + isChainValid());
+        ArrayList<Thread> threadList = new ArrayList<>();
+        for(Node node : nodeList) {
+            Thread thread = new Thread(node);
+            threadList.add(thread);
+            thread.start();
+        }
     }
 
     public static Boolean isChainValid() {
