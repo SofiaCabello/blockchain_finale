@@ -1,4 +1,7 @@
-package org.example;
+package org.example.block;
+
+import org.example.StringUtil;
+import org.example.transaction.Transaction;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -33,7 +36,7 @@ public class Block {
             nonce++;
             hash = calculateHash();
         }
-        System.out.println("Block Mined!!! : " + hash);
+        //System.out.println("Block Mined!!! : " + hash);
     }
 
     public void addTransaction(Transaction transaction) {
@@ -41,7 +44,8 @@ public class Block {
             return;
         }
         if((!Objects.equals(previousHash, "0"))) {
-            if((!transaction.processTransaction())) {
+            boolean result = transaction.processTransaction();
+            if(!result) {
                 System.out.println("Transaction failed to process. Discarded.");
                 return;
             }

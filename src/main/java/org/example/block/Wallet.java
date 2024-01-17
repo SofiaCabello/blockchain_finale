@@ -1,4 +1,9 @@
-package org.example;
+package org.example.block;
+
+import org.example.Main;
+import org.example.transaction.Transaction;
+import org.example.transaction.TransactionInput;
+import org.example.transaction.TransactionOutput;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -10,9 +15,7 @@ import java.security.*;
 public class Wallet {
     public PrivateKey privateKey;
     public PublicKey publicKey;
-
     public HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
-
     public Wallet() {
         generateKeyPair();
     }
@@ -58,7 +61,7 @@ public class Wallet {
             TransactionOutput UTXO = item.getValue();
             total += UTXO.value;
             inputs.add(new TransactionInput(UTXO.id));
-            if(total > value) {
+            if(total >= value) {
                 break;
             }
         }

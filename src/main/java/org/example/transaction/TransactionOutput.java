@@ -1,9 +1,12 @@
-package org.example;
+package org.example.transaction;
+
+import org.example.StringUtil;
 
 import java.security.PublicKey;
 import java.security.cert.TrustAnchor;
 
 public class TransactionOutput {
+    // 交易输出
     public String id;
     public PublicKey receiver; //接收者的公钥
     public float value; //交易金额

@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.transaction.Transaction;
+
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.ArrayList;
