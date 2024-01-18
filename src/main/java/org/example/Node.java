@@ -5,13 +5,14 @@ import org.example.block.Wallet;
 import org.example.transaction.Transaction;
 import org.example.transaction.TransactionOutput;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import static java.lang.Thread.sleep;
 
 public class Node implements Runnable{
-    private String nodeId;  // 节点的唯一标识
+    public String nodeId;  // 节点的唯一标识
     Wallet wallet;  // 每个节点都有一个钱包
     private ArrayList<Block> blockchain; // 区块链副本
     private HashMap<String, TransactionOutput> UTXOs;
@@ -29,14 +30,12 @@ public class Node implements Runnable{
     @Override
     public void run(){
         long startTime = System.currentTimeMillis();
-        //while(System.currentTimeMillis() - startTime < runDuration){
-        while(true){
+        while(System.currentTimeMillis() - startTime < runDuration){
             processPendingTransactions(); // 每个节点每次循环都会处理挂起的交易
             mineBlock();
-            printWalletBalance();
             System.out.println("Node " + nodeId + " blockchain size: " + blockchain.size()); // 打印当前区块链长度
         }
-        //printWalletBalance();
+        printWalletBalance();
     }
 
     private void mineBlock() {
@@ -45,11 +44,15 @@ public class Node implements Runnable{
             // 如果有挂起的交易，则挖矿
             //System.out.println("Node " + nodeId + " is mining a block...");
             Block block = new Block(blockchain.get(blockchain.size() - 1).hash);
+            // 激励机制
+            Transaction coinbaseTx = new Transaction(null, wallet.publicKey, 12.5f, null);
+            coinbaseTx.transactionId = "0";
+            block.addTransaction(coinbaseTx);
             for(Transaction transaction : pendingTransactions){
                 block.addTransaction(transaction); // 将挂起的交易添加到区块中，这样交易就被处理了
             }
             addBlock(block); // 将区块添加到区块链中
-            //System.out.println("Node " + nodeId + " mined a block: " + block.hash);
+            // 创建激励交易
             pendingTransactions.clear();
         }
     }
@@ -61,7 +64,9 @@ public class Node implements Runnable{
 
     private void processPendingTransactions() {
         // 处理挂起的交易
-        Transaction newTransaction = wallet.sendFunds(wallet.publicKey, 10f); // 发起一笔交易，将10f发送到自己的钱包中
+        // 发起随机交易
+        PublicKey receiverKey = Main.nodeList.get((int)(Math.random() * Main.nodeList.size())).wallet.publicKey;
+        Transaction newTransaction = wallet.sendFunds(receiverKey, 10f);
         if(newTransaction != null){
             pendingTransactions.add(newTransaction);
             System.out.println("From Node: " + newTransaction.sender + " to Node: " + newTransaction.receiver);
@@ -71,4 +76,10 @@ public class Node implements Runnable{
     private void printWalletBalance() {
         System.out.println("Node " + nodeId + " wallet balance: " + wallet.getBalance());
     }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+
 }

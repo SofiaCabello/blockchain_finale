@@ -5,9 +5,13 @@ import org.example.block.Wallet;
 import org.example.transaction.Transaction;
 import org.example.transaction.TransactionOutput;
 
+import java.awt.image.AreaAveragingScaleFilter;
+import java.security.PublicKey;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static java.lang.Thread.sleep;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -20,6 +24,7 @@ public class Main {
     public static Wallet walletB; // 钱包B
     public static Wallet walletC;
     public static Transaction genesisTransaction; // 创世交易
+    public static ArrayList<Node> nodeList = new ArrayList<>();
 
 
     public static void main(String[] args) {
@@ -28,9 +33,7 @@ public class Main {
         Block genesisBlock = new Block("0");
         genesisBlock.mineBlock(difficulty);
         blockchain.add(genesisBlock);
-
         int numberOfNodes = 3;
-        ArrayList<Node> nodeList = new ArrayList<>();
         for(int i = 0; i < numberOfNodes; i++) {
             Node node = new Node("Node " + i, blockchain, UTXOs);
             nodeList.add(node);
@@ -48,6 +51,24 @@ public class Main {
             threadList.add(thread);
             thread.start();
         }
+
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Thread printBlockTransactionsHistoryThread = new Thread(() -> {
+            try {
+                sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            printBlockTransactionsHistory();
+        });
+        printBlockTransactionsHistoryThread.start();
+
+
 
 //        walletA = new Wallet();
 //        walletB = new Wallet();
@@ -114,6 +135,25 @@ public class Main {
             }
         }
         return true;
+    }
+
+    public static HashMap<PublicKey, String> getNodeIdMap() {
+        HashMap<PublicKey, String> nodeIdMap = new HashMap<>();
+        for(Node node : nodeList) {
+            nodeIdMap.put(node.wallet.publicKey, node.nodeId);
+        }
+        return nodeIdMap;
+    }
+
+    public static void printBlockTransactionsHistory() {
+        HashMap<PublicKey, String> nodeIdMap = getNodeIdMap();
+        for(Block block : blockchain){
+            System.out.println("Block " + block.hash + " transactions: ");
+            for(Transaction transaction : block.transactions){
+                System.out.println("From Node: " + nodeIdMap.get(transaction.sender) + " to Node: " + nodeIdMap.get(transaction.receiver));
+                System.out.println("Transaction amount: " + transaction.value);
+            }
+        }
     }
 
     public static void addBlock(Block newBlock) {

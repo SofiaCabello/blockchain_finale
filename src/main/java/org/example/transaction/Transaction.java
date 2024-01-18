@@ -48,6 +48,10 @@ public class Transaction {
     }
 
     public boolean processTransaction() {
+        if(sender == null) {
+            return true;
+        }
+
         // 验证交易签名
         if (!verifySignature()) {
             System.out.println("#Transaction Signature failed to verify");
