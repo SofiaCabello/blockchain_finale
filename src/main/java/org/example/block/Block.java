@@ -1,6 +1,6 @@
 package org.example.block;
 
-import org.example.StringUtil;
+import org.example.util.StringUtil;
 import org.example.transaction.Transaction;
 
 import java.util.ArrayList;

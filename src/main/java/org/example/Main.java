@@ -6,11 +6,14 @@ import org.example.transaction.Transaction;
 import org.example.transaction.TransactionOutput;
 
 import java.awt.image.AreaAveragingScaleFilter;
+import java.io.File;
+import java.io.FileWriter;
 import java.security.PublicKey;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import com.google.gson.Gson;
 
 import static java.lang.Thread.sleep;
 
@@ -67,6 +70,7 @@ public class Main {
                 e.printStackTrace();
             }
             printBlockTransactionsHistory();
+            saveBlockChainAsJsonFile();
         });
         printBlockTransactionsHistoryThread.start();
 
@@ -166,5 +170,28 @@ public class Main {
     public static void addBlock(Block newBlock) {
         newBlock.mineBlock(difficulty);
         blockchain.add(newBlock);
+    }
+
+    public static void saveBlockChainAsJsonFile() {
+        long timestamp = System.currentTimeMillis();
+        String fileName = "blockchain_" + timestamp + ".json";
+        File file = new File(fileName);
+        if(!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        // 向文件中写入内容
+        Gson gson = new Gson();
+        String json = gson.toJson(blockchain);
+
+        try(FileWriter writer = new FileWriter(file)){
+            writer.write(json);
+            writer.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

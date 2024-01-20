@@ -1,13 +1,12 @@
-package org.example;
-
-import org.bouncycastle.asn1.mozilla.SignedPublicKeyAndChallenge;
+package org.example.util;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 
-public class CryptoInput {
+public class CryptoUtil {
     public static byte[] applyECDSASig(PrivateKey privateKey, String input) {
+        // 实现签名的方法，采用ECDSA算法
         Signature dsa;
         byte[] output = new byte[0];
         try {

@@ -1,9 +1,8 @@
 package org.example.transaction;
 
-import org.example.StringUtil;
+import org.example.util.StringUtil;
 
 import java.security.PublicKey;
-import java.security.cert.TrustAnchor;
 
 public class TransactionOutput {
     // 交易输出类

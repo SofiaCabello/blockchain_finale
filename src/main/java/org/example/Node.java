@@ -19,6 +19,7 @@ public class Node implements Runnable{
     private ConcurrentHashMap<String, TransactionOutput> UTXOs;
     private ArrayList<Transaction> pendingTransactions; // 节点尚未处理的交易
     private final long runDuration = 10000;
+    private final int runTimes = 10;
 
     public Node(String nodeId, ArrayList<Block> blockchain, ConcurrentHashMap<String, TransactionOutput> UTXOs){
         this.nodeId = nodeId;
@@ -34,6 +35,7 @@ public class Node implements Runnable{
         while(System.currentTimeMillis() - startTime < runDuration){
             processPendingTransactions(); // 每个节点每次循环都会处理挂起的交易
             mineBlock();
+            giveReward();
             System.out.println("Node " + nodeId + " blockchain size: " + blockchain.size()); // 打印当前区块链长度
             printWalletBalance();
             try{
@@ -51,13 +53,6 @@ public class Node implements Runnable{
             // 如果有挂起的交易，则挖矿
             //System.out.println("Node " + nodeId + " is mining a block...");
             Block block = new Block(blockchain.get(blockchain.size() - 1).hash);
-            // 激励机制
-            Transaction rewardTx = new Transaction(null, wallet.publicKey, 12.5f, null);
-            rewardTx.transactionId = "0";
-            rewardTx.outputs.add(new TransactionOutput(rewardTx.receiver, rewardTx.value, rewardTx.transactionId));
-            UTXOs.put(rewardTx.outputs.get(0).id, rewardTx.outputs.get(0));
-            this.wallet.UTXOs.put(rewardTx.outputs.get(0).id, rewardTx.outputs.get(0));
-            block.addTransaction(rewardTx);
             for(Transaction transaction : pendingTransactions){
                 block.addTransaction(transaction); // 将挂起的交易添加到区块中，这样交易就被处理了
             }
@@ -65,6 +60,17 @@ public class Node implements Runnable{
             // 创建激励交易
             pendingTransactions.clear();
         }
+    }
+
+    private void giveReward() {
+        // 创建激励交易
+        Transaction rewardTransaction = new Transaction(null, wallet.publicKey, 15f, null);
+        rewardTransaction.transactionId = String.valueOf("0");
+        rewardTransaction.outputs.add(new TransactionOutput(rewardTransaction.receiver, rewardTransaction.value, rewardTransaction.transactionId));
+        UTXOs.put(rewardTransaction.outputs.get(0).id, rewardTransaction.outputs.get(0));
+        wallet.UTXOs.put(rewardTransaction.outputs.get(0).id, rewardTransaction.outputs.get(0));
+        pendingTransactions.add(rewardTransaction);
+        System.out.println("Give reward to " + nodeId);
     }
 
     private void addBlock(Block newBlock) {

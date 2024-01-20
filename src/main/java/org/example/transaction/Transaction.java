@@ -1,8 +1,8 @@
 package org.example.transaction;
 
-import org.example.CryptoInput;
+import org.example.util.CryptoUtil;
 import org.example.Main;
-import org.example.StringUtil;
+import org.example.util.StringUtil;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -40,12 +40,12 @@ public class Transaction {
 
     public void generateSignature(PrivateKey privateKey) {
         String data = StringUtil.getStringFromKey(sender) + StringUtil.getStringFromKey(receiver) + Float.toString(value);
-        signature = CryptoInput.applyECDSASig(privateKey, data);
+        signature = CryptoUtil.applyECDSASig(privateKey, data);
     }
 
     public boolean verifySignature() {
         String data = StringUtil.getStringFromKey(sender) + StringUtil.getStringFromKey(receiver) + Float.toString(value);
-        return CryptoInput.verifyECDSASig(sender, data, signature);
+        return CryptoUtil.verifyECDSASig(sender, data, signature);
     }
 
     public boolean processTransaction() {
