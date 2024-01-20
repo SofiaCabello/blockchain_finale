@@ -10,10 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Transaction {
+    // 交易类
     public String transactionId;   // 交易的唯一标识
-    public PublicKey sender;
-    public PublicKey receiver;
-    public float value;
+    public PublicKey sender; // 发送方公钥
+    public PublicKey receiver;  // 接收方公钥
+    public float value; // 交易金额
     public byte[] signature;    // 交易的签名
     public List<TransactionInput> inputs;  // 交易的输入列表
     public List<TransactionOutput> outputs = new ArrayList<>(); // 交易的输出列表

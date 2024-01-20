@@ -8,6 +8,7 @@ import org.example.transaction.TransactionOutput;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Thread.sleep;
 
@@ -15,11 +16,11 @@ public class Node implements Runnable{
     public String nodeId;  // 节点的唯一标识
     Wallet wallet;  // 每个节点都有一个钱包
     private ArrayList<Block> blockchain; // 区块链副本
-    private HashMap<String, TransactionOutput> UTXOs;
+    private ConcurrentHashMap<String, TransactionOutput> UTXOs;
     private ArrayList<Transaction> pendingTransactions; // 节点尚未处理的交易
     private final long runDuration = 10000;
 
-    public Node(String nodeId, ArrayList<Block> blockchain, HashMap<String, TransactionOutput> UTXOs){
+    public Node(String nodeId, ArrayList<Block> blockchain, ConcurrentHashMap<String, TransactionOutput> UTXOs){
         this.nodeId = nodeId;
         this.wallet = new Wallet();
         this.blockchain = blockchain;
@@ -34,6 +35,12 @@ public class Node implements Runnable{
             processPendingTransactions(); // 每个节点每次循环都会处理挂起的交易
             mineBlock();
             System.out.println("Node " + nodeId + " blockchain size: " + blockchain.size()); // 打印当前区块链长度
+            printWalletBalance();
+            try{
+                sleep(1000);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         printWalletBalance();
     }
@@ -45,9 +52,12 @@ public class Node implements Runnable{
             //System.out.println("Node " + nodeId + " is mining a block...");
             Block block = new Block(blockchain.get(blockchain.size() - 1).hash);
             // 激励机制
-            Transaction coinbaseTx = new Transaction(null, wallet.publicKey, 12.5f, null);
-            coinbaseTx.transactionId = "0";
-            block.addTransaction(coinbaseTx);
+            Transaction rewardTx = new Transaction(null, wallet.publicKey, 12.5f, null);
+            rewardTx.transactionId = "0";
+            rewardTx.outputs.add(new TransactionOutput(rewardTx.receiver, rewardTx.value, rewardTx.transactionId));
+            UTXOs.put(rewardTx.outputs.get(0).id, rewardTx.outputs.get(0));
+            this.wallet.UTXOs.put(rewardTx.outputs.get(0).id, rewardTx.outputs.get(0));
+            block.addTransaction(rewardTx);
             for(Transaction transaction : pendingTransactions){
                 block.addTransaction(transaction); // 将挂起的交易添加到区块中，这样交易就被处理了
             }
@@ -69,7 +79,7 @@ public class Node implements Runnable{
         Transaction newTransaction = wallet.sendFunds(receiverKey, 10f);
         if(newTransaction != null){
             pendingTransactions.add(newTransaction);
-            System.out.println("From Node: " + newTransaction.sender + " to Node: " + newTransaction.receiver);
+            System.out.println("Node " + nodeId + "---10.0--->" + Main.nodeIdMap.get(receiverKey));
         }
     }
 

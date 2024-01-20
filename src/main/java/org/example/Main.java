@@ -10,6 +10,7 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Thread.sleep;
 
@@ -17,7 +18,7 @@ import static java.lang.Thread.sleep;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static ArrayList<Block> blockchain = new ArrayList<Block>();
-    public static HashMap<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>(); // 未使用的交易输出
+    public static ConcurrentHashMap<String, TransactionOutput> UTXOs = new ConcurrentHashMap<>(); // 未使用的交易输出
     public static int difficulty = 5; // 难度
     public static float minimumTransaction = 0.1f; // 最小交易金额
     public static Wallet walletA; // 钱包A
@@ -25,7 +26,7 @@ public class Main {
     public static Wallet walletC;
     public static Transaction genesisTransaction; // 创世交易
     public static ArrayList<Node> nodeList = new ArrayList<>();
-
+    public static HashMap<PublicKey, String> nodeIdMap = new HashMap<>();
 
     public static void main(String[] args) {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); // 设置Bouncey castle作为安全提供者
@@ -44,6 +45,7 @@ public class Main {
             UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
             node.wallet.UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
         }
+        nodeIdMap = getNodeIdMap();
 
         ArrayList<Thread> threadList = new ArrayList<>();
         for(Node node : nodeList) {
@@ -53,7 +55,7 @@ public class Main {
         }
 
         try {
-            sleep(1000);
+            sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -67,7 +69,6 @@ public class Main {
             printBlockTransactionsHistory();
         });
         printBlockTransactionsHistoryThread.start();
-
 
 
 //        walletA = new Wallet();
@@ -146,12 +147,18 @@ public class Main {
     }
 
     public static void printBlockTransactionsHistory() {
-        HashMap<PublicKey, String> nodeIdMap = getNodeIdMap();
+        System.out.println("-------------------PRINTING BLOCKCHAIN-------------------");
         for(Block block : blockchain){
             System.out.println("Block " + block.hash + " transactions: ");
             for(Transaction transaction : block.transactions){
-                System.out.println("From Node: " + nodeIdMap.get(transaction.sender) + " to Node: " + nodeIdMap.get(transaction.receiver));
-                System.out.println("Transaction amount: " + transaction.value);
+                if(transaction.sender == null){
+                    System.out.println("Reward transaction to Node: " + nodeIdMap.get(transaction.receiver));
+                    System.out.println("Transaction amount: " + transaction.value);
+                }else{
+                    System.out.println(nodeIdMap.get(transaction.sender) + "---" + transaction.value + "-->" + nodeIdMap.get(transaction.receiver));
+                    System.out.println("Transaction amount: " + transaction.value);
+
+                }
             }
         }
     }
